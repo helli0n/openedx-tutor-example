@@ -1,0 +1,25 @@
+version: "3.7"
+services:
+  # Web proxy for load balancing and SSL termination
+  caddy:
+    image: docker.io/caddy:2.4.6
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      
+    environment:
+      default_site_port: ":80"
+    volumes:
+      - ../apps/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      
+    
+    networks:
+      default:
+        # These aliases are for internal communication between containers when running locally
+        # with *.local.overhang.io hostnames.
+        aliases:
+          - "local.overhang.io"
+          
+    
+
+  

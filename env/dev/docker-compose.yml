@@ -1,0 +1,63 @@
+version: "3.7"
+
+x-openedx-service:
+  &openedx-service
+  image: openedx-dev
+  build:
+    context: ../build/openedx/
+    target: development
+    args:
+      # Note that we never build the openedx-dev image with root user ID, as it would simply fail.
+      APP_USER_ID: "501"
+  stdin_open: true
+  tty: true
+  volumes:
+    # Settings & config
+    - ../apps/openedx/settings/lms:/openedx/edx-platform/lms/envs/tutor:ro
+    - ../apps/openedx/settings/cms:/openedx/edx-platform/cms/envs/tutor:ro
+    - ../apps/openedx/config:/openedx/config:ro
+    # theme files
+    - ../build/openedx/themes:/openedx/themes
+    # editable requirements
+    - ../build/openedx/requirements:/openedx/requirements
+
+services:
+  lms-permissions:
+    command: ["501", "/openedx/data", "/openedx/media"]
+
+  cms-permissions:
+    command: ["501", "/openedx/data", "/openedx/media"]
+
+  lms:
+    <<: *openedx-service
+    command: ./manage.py lms runserver 0.0.0.0:8000
+    environment:
+        DJANGO_SETTINGS_MODULE: lms.envs.tutor.development
+    ports:
+        - "8000:8000"
+    networks:
+      default:
+        aliases:
+          - "local.overhang.io"
+
+  cms:
+    <<: *openedx-service
+    command: ./manage.py cms runserver 0.0.0.0:8000
+    environment:
+        DJANGO_SETTINGS_MODULE: cms.envs.tutor.development
+    ports:
+        - "8001:8000"
+
+  lms-worker:
+    <<: *openedx-service
+
+  cms-worker:
+    <<: *openedx-service
+
+  # Additional service for watching theme changes
+  watchthemes:
+    <<: *openedx-service
+    command: openedx-assets watch-themes --env dev
+    restart: unless-stopped
+
+  
