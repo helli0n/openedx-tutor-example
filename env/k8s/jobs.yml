@@ -84,4 +84,7 @@ spec:
       containers:
       - name: mysql
         image: docker.io/mysql:5.7.35
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "V3peoYnf"
 
